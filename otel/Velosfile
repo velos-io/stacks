@@ -1,0 +1,64 @@
+"""OpenTelemetry Stack — Prometheus, OTel Collector, Jaeger, Grafana."""
+
+from velos import Mount, Port, Service
+
+services = [
+    Service(
+        name="jaeger",
+        image="jaegertracing/all-in-one:1.62.0",
+        group="otel",
+        ports=[
+            Port(16686, host=16686),
+            Port(14317, host=14317),
+            Port(14318, host=14318),
+        ],
+        env={
+            "COLLECTOR_OTLP_ENABLED": "true",
+        },
+    ),
+    Service(
+        name="prometheus",
+        image="prom/prometheus:v2.55.1",
+        group="otel",
+        ports=[Port(9090, host=9090)],
+        command=[
+            "--config.file=/etc/prometheus/prometheus.yml",
+            "--storage.tsdb.path=/prometheus",
+            "--web.console.libraries=/etc/prometheus/console_libraries",
+            "--web.console.templates=/etc/prometheus/consoles",
+            "--web.enable-lifecycle",
+        ],
+        mounts=[
+            Mount.ro("config/prometheus.yml", "/etc/prometheus/prometheus.yml"),
+            Mount.volume("prometheus-data", "/prometheus"),
+        ],
+    ),
+    Service(
+        name="otel-collector",
+        image="otel/opentelemetry-collector:0.114.0",
+        group="otel",
+        ports=[
+            Port(4317, host=4317),
+            Port(4318, host=4318),
+            Port(8888, host=8888),
+            Port(8889, host=8889),
+        ],
+        command=["--config=/etc/otel-collector-config.yaml"],
+        mounts=[
+            Mount.ro("config/otel-collector-config.yaml", "/etc/otel-collector-config.yaml"),
+        ],
+        wait_for=["jaeger", "prometheus"],
+    ),
+    Service(
+        name="grafana",
+        image="grafana/grafana:11.0.0",
+        group="otel",
+        ports=[Port(3000, host=3000)],
+        env={
+            "GF_AUTH_ANONYMOUS_ENABLED": "true",
+            "GF_AUTH_ANONYMOUS_ORG_ROLE": "Admin",
+            "GF_AUTH_DISABLE_LOGIN_FORM": "true",
+        },
+        wait_for=["prometheus"],
+    ),
+]
