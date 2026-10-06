@@ -1,6 +1,6 @@
 """OpenTelemetry Stack — Prometheus, OTel Collector, Jaeger, Grafana."""
 
-from velos import Mount, Port, Service
+from ved import Mount, Port, Service
 
 services = [
     Service(

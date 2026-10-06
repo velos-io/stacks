@@ -16,7 +16,7 @@ Curated observability stack providing metrics collection, distributed tracing, a
 - **`grafana`** (`grafana/grafana:11.0.0`): Metric dashboard UI.
   - UI: `http://localhost:3000` (anonymous admin enabled)
 
-## Usage in Velosfile
+## Usage in Vedfile
 ```python
 Stack.add("otel")
 ```
